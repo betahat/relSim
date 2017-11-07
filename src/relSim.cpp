@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <iostream>
 using namespace Rcpp;
 
 int profIBS(IntegerVector::const_iterator Prof){
@@ -317,7 +318,7 @@ IntegerVector randomChildren(IntegerVector ProfParent, List listFreqs, int nBloc
   return ProfChild;
 }
 
-double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_iterator ProfChild, NumericVector& Freq){
+double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_iterator ProfChild, NumericVector& Freq, int & dc){
 	double dLR = 1;
 	
 	if(ProfChild[0] == ProfChild[1]){ // Child is aa
@@ -327,11 +328,13 @@ double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_
 			if(ProfParent[0] == ProfChild[0]){ // Parent is aa
 				dLR /= dPa;
 			}else{ // Parent is bb
-				dLR = 0;
+				dLR = 1;
+        dc++;
 			}
 		}else{ // Parent is ab or bc
 			if(ProfParent[0] != ProfChild[0] && ProfParent[1] != ProfChild[0]){ // Parent is bc
-				dLR = 0;
+				dLR = 1;
+        dc++;
 			}else{ // Parent is ab
 				dLR /= 2 * dPa;
 			}
@@ -346,7 +349,8 @@ double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_
 			}else if(ProfParent[0]==ProfChild[1]){ // Parent is bb
 				dLR /= 2 * dPb;
 			}else{ // Parent is cc
-				dLR = 0;
+				dLR = 1;
+        dc++;
 			}
 		}else{ // Parent is ab, bc, ac, or cd
 			if(ProfParent[0] == ProfChild[0] && ProfParent[1] == ProfChild[1]){ // Parent is ab
@@ -356,7 +360,8 @@ double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_
 			}else if(ProfParent[0] == ProfChild[1] || ProfParent[1] == ProfChild[1]){ // Parent is bc or cb
 				dLR /= 4 * dPb;
 			}else{ // Parent is cd
-				dLR = 0;
+				dLR = 1;
+        dc++;
 			}
 		}
 	}
@@ -368,21 +373,22 @@ double lrPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_itera
             List listFreqs){
 	int nLoci = listFreqs.size();
 	int nLoc = 0;
+  int denovo_cnt = 0;
 	double dLR = 1;
 	
-	while(dLR > 0 && nLoc < nLoci){
+	while(nLoc < nLoci){
 		int i1 = 2 * nLoc;
-		NumericVector Freqs = as<NumericVector>(listFreqs[nLoc]);	
+		NumericVector Freqs = as<NumericVector>(listFreqs[nLoc]);
     
-		dLR *= locusLRPC(ProfParent + i1, ProfChild + i1, Freqs);;
+		dLR *= locusLRPC(ProfParent + i1, ProfChild + i1, Freqs, denovo_cnt);
 		nLoc++;
 	}
-	
+  std::cout << "De novo loci: " << denovo_cnt << std::endl;
 	return(dLR);
 }
 
 // [[Rcpp::export(".lrPC")]]
-double lrPC_Caller(IntegerVector ProfParent, IntegerVector ProfChild, 
+double lrPC_Caller(IntegerVector ProfParent, IntegerVector ProfChild,
             List listFreqs){
   return lrPC(ProfParent.begin(), ProfChild.begin(), listFreqs);
 }
