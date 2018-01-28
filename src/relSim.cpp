@@ -320,8 +320,9 @@ IntegerVector randomChildren(IntegerVector ProfParent, List listFreqs, int nBloc
 
 double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_iterator ProfChild, NumericVector& Freq, int & dc){
 	double dLR = 1;
-	
-	if(ProfChild[0] == ProfChild[1]){ // Child is aa
+	if (ProfChild[0] == -9 || ProfChild[1] == -9 || ProfParent[0] == -9 || ProfParent[1] == -9) {
+		// do nothing
+	}else if (ProfChild[0] == ProfChild[1]){ // Child is aa
 		double dPa = Freq[ProfChild[0] - 1];
   
 		if(ProfParent[0] == ProfParent[1]){ // Parent is aa or bb
@@ -329,12 +330,12 @@ double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_
 				dLR /= dPa;
 			}else{ // Parent is bb
 				dLR = 1;
-        dc++;
+        			dc++;
 			}
 		}else{ // Parent is ab or bc
 			if(ProfParent[0] != ProfChild[0] && ProfParent[1] != ProfChild[0]){ // Parent is bc
 				dLR = 1;
-        dc++;
+        			dc++;
 			}else{ // Parent is ab
 				dLR /= 2 * dPa;
 			}
@@ -350,7 +351,7 @@ double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_
 				dLR /= 2 * dPb;
 			}else{ // Parent is cc
 				dLR = 1;
-        dc++;
+        			dc++;
 			}
 		}else{ // Parent is ab, bc, ac, or cd
 			if(ProfParent[0] == ProfChild[0] && ProfParent[1] == ProfChild[1]){ // Parent is ab
@@ -361,7 +362,7 @@ double locusLRPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_
 				dLR /= 4 * dPb;
 			}else{ // Parent is cd
 				dLR = 1;
-        dc++;
+        			dc++;
 			}
 		}
 	}
@@ -373,7 +374,7 @@ double lrPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_itera
             List listFreqs){
 	int nLoci = listFreqs.size();
 	int nLoc = 0;
-  int denovo_cnt = 0;
+  	int denovo_cnt = 0;
 	double dLR = 1;
 	
 	while(nLoc < nLoci){
@@ -383,7 +384,8 @@ double lrPC(IntegerVector::const_iterator ProfParent, IntegerVector::const_itera
 		dLR *= locusLRPC(ProfParent + i1, ProfChild + i1, Freqs, denovo_cnt);
 		nLoc++;
 	}
-  std::cout << "De novo loci: " << denovo_cnt << std::endl;
+	std::cout << "De novo loci: " << denovo_cnt << std::endl;
+  	std::cout << "LR: " << dLR << std::endl;
 	return(dLR);
 }
 
